@@ -36,6 +36,7 @@ static bool unlock_global_acpi_lock(void)
 }
 
 enum ayn_model {
+	ayn_loki_max = 1,
 };
 
 static enum ayn_model model;
@@ -248,12 +249,7 @@ static const struct hwmon_channel_info * const ayn_platform_sensors[] = {
 			   HWMON_PWM_INPUT | HWMON_PWM_ENABLE),
 	NULL,
 };
-/*
-static struct attribute *ayn_ec_attrs[] = {
-	&dev_attr_tt_toggle.attr,
-	NULL
-};
-*/
+
 ATTRIBUTE_GROUPS(ayn_ec);
 
 static const struct hwmon_ops ayn_ec_hwmon_ops = {
