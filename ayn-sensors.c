@@ -185,7 +185,7 @@ static int ayn_platform_read(struct device *dev, enum hwmon_sensor_types type,
 				return ret;
 			switch (model) {
 			case ayn_loki_max:
-				*val = (*val * 255) / 128;
+				*val = *val << 1; /* EC max value is 128 */
 				break;
 			default:
 				break;
@@ -193,19 +193,18 @@ static int ayn_platform_read(struct device *dev, enum hwmon_sensor_types type,
 			return 0;
 		case hwmon_pwm_enable:
 			ret = read_from_ec(AYN_SENSOR_PWM_FAN_MODE_REG, 1, val);
-			if (!ret) {
-				return 0;
-			}
-			switch (ret) {
-				case 0:
-					return 1;
-					break;
-				case 1:
-					return 0;
-					break;
-				default:
-					return ret;
+			switch (*val) {
+			/* EC uses 0 for manual and 1 for automatic, reflect sfsfs usage instead */
+			case 0:
+				*val = 1;
+				break;
+			case 1:
+				*val = 0;
+				break;
+			default:
+				break;
 			}	
+			return ret;
 
 		default:
 			break;
@@ -236,7 +235,7 @@ static int ayn_platform_write(struct device *dev, enum hwmon_sensor_types type,
 				return -EINVAL;
 			switch (model) {
 			case ayn_loki_max:
-				val = (val * 128) / 255;
+				val = val >> 1; /* EC max value is 128 */
 				break;
 			default:
 				break;
