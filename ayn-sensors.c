@@ -267,17 +267,6 @@ static int ayn_platform_probe(struct platform_device *pdev)
 	int ret;
 
 	dmi_entry = dmi_first_match(dmi_table);
-	model = (enum ayn_model)(unsigned long)dmi_entry->driver_data;
-
-	switch (model) {
-	case ayn_loki_max:
-		ret = devm_device_add_groups(dev, ayn_ec_groups);
-		if (ret)
-			return ret;
-		break;
-	default:
-		break;
-	}
 
 	hwdev = devm_hwmon_device_register_with_info(dev, "aynec", NULL,
 						     &ayn_ec_chip_info, NULL);
