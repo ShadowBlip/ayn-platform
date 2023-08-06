@@ -5,7 +5,7 @@
  * exposed by the EC and RGB control via platform sysfs.
  *
  * Fan control is provided via pwm interface in the range [0-255].
- * They use [0-100] as range in the EC, the written value is
+ * They use [0-128] as range in the EC, the written value is
  * scaled to accommodate for that.
  *
  * Copyright (C) 2023 Derek J. Clark <derekjohn.clark@gmail.com>
@@ -187,7 +187,7 @@ static int ayn_platform_read(struct device *dev, enum hwmon_sensor_types type,
 				return ret;
 			switch (model) {
 			case ayn_loki_max:
-				*val = (*val * 255) / 100;
+				*val = (*val * 255) / 128;
 				break;
 			default:
 				break;
@@ -224,7 +224,7 @@ static int ayn_platform_write(struct device *dev, enum hwmon_sensor_types type,
 				return -EINVAL;
 			switch (model) {
 			case ayn_loki_max:
-				val = (val * 100) / 255;
+				val = (val * 128) / 255;
 				break;
 			default:
 				break;
