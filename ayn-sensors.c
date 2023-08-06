@@ -45,13 +45,10 @@ static enum ayn_model model;
 /* TODO:
  */
 #define AYN_SENSOR_TEMP_0_REG		0x04 /* Battery */
-#define AYN_SENSOR_TEMP_1_REG		0x05 /* Mothermodel */
-#define AYN_SENSOR_TEMP_2_REG		0x06 /* unknown */
+#define AYN_SENSOR_TEMP_1_REG		0x05 /* Motherboard */
 #define AYN_SENSOR_TEMP_3_REG		0x07 /* Charger IC */
 #define AYN_SENSOR_TEMP_4_REG		0x08 /* vCore */
 #define AYN_SENSOR_TEMP_5_REG		0x09 /* CPU Core */
-#define AYN_SENSOR_TEMP_6_REG		0x0A /* unknown */
-#define AYN_SENSOR_TEMP_7_REG		0x0B /* unknown */
 
 /* Fan reading and PWM */
 #define AYN_SENSOR_PWM_FAN_SPEED_REG		0x20 /* Fan speed reading is 2 registers long */
@@ -249,8 +246,6 @@ static const struct hwmon_channel_info * const ayn_platform_sensors[] = {
 			   HWMON_PWM_INPUT | HWMON_PWM_ENABLE),
 	NULL,
 };
-
-ATTRIBUTE_GROUPS(ayn_ec);
 
 static const struct hwmon_ops ayn_ec_hwmon_ops = {
 	.is_visible = ayn_ec_hwmon_is_visible,
