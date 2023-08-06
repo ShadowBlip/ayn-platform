@@ -193,7 +193,7 @@ static int ayn_platform_read(struct device *dev, enum hwmon_sensor_types type,
 			return 0;
 		case hwmon_pwm_enable:
 			ret = read_from_ec(AYN_SENSOR_PWM_FAN_MODE_REG, 1, val);
-			if (!ret): {
+			if (!ret) {
 				return 0;
 			}
 			switch (ret) {
