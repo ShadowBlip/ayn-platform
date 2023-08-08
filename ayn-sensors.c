@@ -83,17 +83,17 @@ static enum ayn_model model;
 static const struct dmi_system_id dmi_table[] = {
 	{
 		.matches = {
-			DMI_MATCH(DMI_BOARD_VENDOR, "AYN"),
+			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "ayn"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Loki Max"),
 		},
 		.driver_data = (void *)ayn_loki_max,
 		.matches = {
-			DMI_MATCH(DMI_BOARD_VENDOR, "AYN"),
+			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "ayn"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Loki MiniPro"),
 		},
 		.driver_data = (void *)ayn_loki_minipro,
 		.matches = {
-			DMI_MATCH(DMI_BOARD_VENDOR, "AYN"),
+			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "ayn"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Loki Zero"),
 		},
 		.driver_data = (void *)ayn_loki_zero,
