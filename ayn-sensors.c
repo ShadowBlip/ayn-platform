@@ -37,6 +37,8 @@ static bool unlock_global_acpi_lock(void)
 
 enum ayn_model {
 	ayn_loki_max = 1,
+	ayn_loki_minipro,
+	ayn_loki_zero,
 };
 
 static enum ayn_model model;
@@ -85,6 +87,16 @@ static const struct dmi_system_id dmi_table[] = {
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Loki Max"),
 		},
 		.driver_data = (void *)ayn_loki_max,
+		.matches = {
+			DMI_MATCH(DMI_BOARD_VENDOR, "AYN"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Loki MiniPro"),
+		},
+		.driver_data = (void *)ayn_loki_minipro,
+		.matches = {
+			DMI_MATCH(DMI_BOARD_VENDOR, "AYN"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Loki Zero"),
+		},
+		.driver_data = (void *)ayn_loki_zero,
 	},
 	{},
 };
@@ -185,6 +197,8 @@ static int ayn_platform_read(struct device *dev, enum hwmon_sensor_types type,
 				return ret;
 			switch (model) {
 			case ayn_loki_max:
+			case ayn_loki_minipro:
+			case ayn_loki_zero:
 				*val = *val << 1; /* EC max value is 128 */
 				break;
 			default:
@@ -235,6 +249,8 @@ static int ayn_platform_write(struct device *dev, enum hwmon_sensor_types type,
 				return -EINVAL;
 			switch (model) {
 			case ayn_loki_max:
+			case ayn_loki_minipro:
+			case ayn_loki_zero:
 				val = val >> 1; /* EC max value is 128 */
 				break;
 			default:
