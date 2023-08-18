@@ -47,7 +47,7 @@ Insert the module with `insmod`. Then look for a `hwmon` device with name
 `sensors` will show the fan RPM as read from the EC. You can also read the
 file `fan1_input` to get the fan RPM.
 
-### Manual fan control
+### Fan Control
 
 ***Warning: controlling the fan without an accurate reading of the CPU, GPU,
 and Battery temperature can cause irreversible damage to the device. Use at
