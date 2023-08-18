@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 /*
  * Platform driver for Ayn x86 Handhelds that expose fan reading and
- * control via hwmon sysfs, as well as temperature sensor readings 
+ * control via hwmon sysfs, as well as temperature sensor readings
  * exposed by the EC and RGB control via platform sysfs.
  *
  * Fan control is provided via pwm interface in the range [0-254].
@@ -63,16 +63,16 @@ static enum ayn_model model;
  * pwm1_auto_point[1-5]_pwm
  * pwm1_auto_point[1-5]_temp 
  */
-#define AYN_SENSOR_PWM_FAN_SPEED_1_REG		0x12  
-#define AYN_SENSOR_PWM_FAN_SPEED_2_REG		0x14  
-#define AYN_SENSOR_PWM_FAN_SPEED_3_REG		0x16  
-#define AYN_SENSOR_PWM_FAN_SPEED_4_REG		0x18  
-#define AYN_SENSOR_PWM_FAN_SPEED_5_REG		0x1A  
-#define AYN_SENSOR_PWM_FAN_TEMP_1_REG		0x13  
-#define AYN_SENSOR_PWM_FAN_TEMP_2_REG		0x15  
-#define AYN_SENSOR_PWM_FAN_TEMP_3_REG		0x17  
-#define AYN_SENSOR_PWM_FAN_TEMP_4_REG		0x19  
-#define AYN_SENSOR_PWM_FAN_TEMP_5_REG		0x1B  
+#define AYN_SENSOR_PWM_FAN_SPEED_1_REG		0x12
+#define AYN_SENSOR_PWM_FAN_SPEED_2_REG		0x14
+#define AYN_SENSOR_PWM_FAN_SPEED_3_REG		0x16
+#define AYN_SENSOR_PWM_FAN_SPEED_4_REG		0x18
+#define AYN_SENSOR_PWM_FAN_SPEED_5_REG		0x1A
+#define AYN_SENSOR_PWM_FAN_TEMP_1_REG		0x13
+#define AYN_SENSOR_PWM_FAN_TEMP_2_REG		0x15
+#define AYN_SENSOR_PWM_FAN_TEMP_3_REG		0x17
+#define AYN_SENSOR_PWM_FAN_TEMP_4_REG		0x19
+#define AYN_SENSOR_PWM_FAN_TEMP_5_REG		0x1B
 
 
 /* EC Controlled PWM RGB registers */
@@ -470,8 +470,8 @@ static int ayn_platform_probe(struct platform_device *pdev)
 
 	model = (enum ayn_model)(unsigned long)dmi_entry->driver_data;
 
-	hwdev = hwmon_device_register_with_info(dev, 
-						"ayn-ec", 
+	hwdev = devm_hwmon_device_register_with_info(dev,
+						"ayn-ec",
 						NULL,
 						&ayn_ec_chip_info,
 						ayn_fan_curve_groups);

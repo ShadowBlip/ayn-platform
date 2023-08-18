@@ -3,7 +3,6 @@
 This driver provides a hwmon interface for PWM control, as well as RGB
 control and access to temperature sensotrs provided by the system EC
 
-
 Supported devices include:
 
  - AYN Loki Max
@@ -39,7 +38,7 @@ $ make
 ## Usage
 
 Insert the module with `insmod`. Then look for a `hwmon` device with name
-`aynec`, i.e.:
+`ayn-ec`, i.e.:
 
 `$ cat /sys/class/hwmon/hwmon?/name`
 
@@ -48,18 +47,49 @@ Insert the module with `insmod`. Then look for a `hwmon` device with name
 `sensors` will show the fan RPM as read from the EC. You can also read the
 file `fan1_input` to get the fan RPM.
 
-### Controlling the fan
+### Manual fan control
 
 ***Warning: controlling the fan without an accurate reading of the CPU, GPU,
 and Battery temperature can cause irreversible damage to the device. Use at
 your own risk!***
 
+#### Automatic Control
+This will use the BIOS default fan curve and is the default setting of the EC.
+
+To enable automatic control of the fan (assuming `hwmon5` is our driver, look for
+`ayn-ec` in the `name` file):
+
+`# echo 0 > /sys/class/hwmon/hwmon5/pwm1_mode`
+
+#### Manual Control
+This mode is usefull to explicitly set a fan speed, or with the use of userspace
+tools that adjust fan speed using a custom fan curve defined in software.
+
 To enable manual control of the fan (assuming `hwmon5` is our driver, look for
-`aynec` in the `name` file):
+`ayn-ec` in the `name` file):
 
-`# echo 1 > /sys/class/hwmon/hwmon5/pwm1_enable`
+`# echo 1 > /sys/class/hwmon/hwmon5/pwm1_mode`
 
-Then input values in the range `[0-255]` to the pwm:
+Then input values in the range `[0-254]` to the pwm:
 
 `# echo 100 > /sys/class/hwmon/hwmon5/pwm1`
 
+#### User Defined Control
+This mode allows the user to override the default BIOS fan curve with a user
+defined fan curve. There are 5 set point pairs for temperature and fan speed.
+The temperature value is a cutoff for that set point, any CPU temperature
+below that point and above the lower set point will run at that set points
+fan speed. Temperature is in degrees Celcius.
+
+To enable user defined control of the fan (assuming `hwmon5` is our driver,
+look for `ayn-ec` in the `name` file):
+
+`# echo 2 > /sys/class/hwmon/hwmon5/pwm1_mode`
+
+Set an input value in the range `[0-254]` to the pwm:
+
+`# echo 100 > /sys/class/hwmon/hwmon5/pwm1_auto_point1_pwm`
+
+Set an input value in the range `[0-100]` to the temp:
+
+`# echo 50 > /sys/class/hwmon/hwmon5/pwm1_auto_point1_temp`
