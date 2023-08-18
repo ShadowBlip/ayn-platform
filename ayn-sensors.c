@@ -468,8 +468,6 @@ static int ayn_platform_probe(struct platform_device *pdev)
 
 	dmi_entry = dmi_first_match(dmi_table);
 
-	model = (enum ayn_model)(unsigned long)dmi_entry->driver_data;
-
 	hwdev = devm_hwmon_device_register_with_info(dev,
 						"ayn-ec",
 						NULL,
