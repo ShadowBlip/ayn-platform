@@ -1,7 +1,7 @@
-# Platform driver for AYN x86 handheldsds
+# Platform driver for AYN x86 handhelds
 
 This driver provides a hwmon interface for PWM control, as well as RGB
-control and access to temperature sensotrs provided by the system EC
+control and access to temperature sensors provided by the system EC
 
 Supported devices include:
 
@@ -62,7 +62,7 @@ To enable automatic control of the fan (assuming `hwmon5` is our driver, look fo
 `# echo 0 > /sys/class/hwmon/hwmon5/pwm1_mode`
 
 #### Manual Control
-This mode is usefull to explicitly set a fan speed, or with the use of userspace
+This mode is useful to explicitly set a fan speed, or with the use of userspace
 tools that adjust fan speed using a custom fan curve defined in software.
 
 To enable manual control of the fan (assuming `hwmon5` is our driver, look for
@@ -79,7 +79,7 @@ This mode allows the user to override the default BIOS fan curve with a user
 defined fan curve. There are 5 set point pairs for temperature and fan speed.
 The temperature value is a cutoff for that set point, any CPU temperature
 below that point and above the lower set point will run at that set points
-fan speed. Temperature is in degrees Celcius.
+fan speed. Temperature is in degrees Celsius.
 
 To enable user defined control of the fan (assuming `hwmon5` is our driver,
 look for `ayn-ec` in the `name` file):
