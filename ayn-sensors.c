@@ -45,13 +45,12 @@ enum ayn_model {
 static enum ayn_model model;
 
 /* EC Teperature Sensors */
-/* TODO:
- */
-#define AYN_SENSOR_TEMP_0_REG		0x04 /* Battery */
-#define AYN_SENSOR_TEMP_1_REG		0x05 /* Motherboard */
-#define AYN_SENSOR_TEMP_3_REG		0x07 /* Charger IC */
-#define AYN_SENSOR_TEMP_4_REG		0x08 /* vCore */
-#define AYN_SENSOR_TEMP_5_REG		0x09 /* CPU Core */
+/* TODO:*/
+#define AYN_SENSOR_BAT_TEMP_REG			0x04 /* Battery */
+#define AYN_SENSOR_MB_TEMP_REG			0x05 /* Motherboard */
+#define AYN_SENSOR_CHARGE_TEMP_REG		0x07 /* Charger IC */
+#define AYN_SENSOR_VCORE_TEMP_REG		0x08 /* vCore */
+#define AYN_SENSOR_PROC_TEMP_REG		0x09 /* CPU Core */
 
 /* Fan reading and PWM */
 #define AYN_SENSOR_PWM_FAN_SPEED_REG		0x20 /* Fan speed reading is 2 registers long */
@@ -59,10 +58,6 @@ static enum ayn_model model;
 #define AYN_SENSOR_PWM_FAN_SET_REG		0x11 /* PWM duty cycle */
 
 /* EC controlled fan curve registers */
-/* TODO:
- * pwm1_auto_point[1-5]_pwm
- * pwm1_auto_point[1-5]_temp 
- */
 #define AYN_SENSOR_PWM_FAN_SPEED_1_REG		0x12
 #define AYN_SENSOR_PWM_FAN_SPEED_2_REG		0x14
 #define AYN_SENSOR_PWM_FAN_SPEED_3_REG		0x16
@@ -76,6 +71,7 @@ static enum ayn_model model;
 
 
 /* EC Controlled PWM RGB registers */
+/* TODO:*/
 #define AYN_SENSOR_PWM_RGB_R_REG		0xB0 /* PWM Red Duty cycle, range 0x00-0xFF */
 #define AYN_SENSOR_PWM_RGB_G_REG		0xB1 /* PWM Green Duty cycle, range 0x00-0xFF */
 #define AYN_SENSOR_PWM_RGB_B_REG		0xB2 /* PWM Blue Duty cycle, range 0x00-0xFF */
@@ -131,14 +127,14 @@ static int read_from_ec(u8 reg, int size, long *val)
 	return 0;
 }
 
-static int write_to_ec(u8 reg, u8 value)
+static int write_to_ec(u8 reg, u8 val)
 {
 	int ret;
 
 	if (!lock_global_acpi_lock())
 		return -EBUSY;
 
-	ret = ec_write(reg, value);
+	ret = ec_write(reg, val);
 
 	if (!unlock_global_acpi_lock())
 		return -EBUSY;
@@ -146,12 +142,12 @@ static int write_to_ec(u8 reg, u8 value)
 	return ret;
 }
 
-/* Callbacks for [pwm/temp]_auto_point attributes */
-static ssize_t pwm_curve_attr_store(struct device *dev,
+/* Callbacks for pwm_auto_point attributes */
+static ssize_t pwm_curve_store(struct device *dev,
 			       struct device_attribute *attr, const char *buf,
 			       size_t count)
 {
-	int index;
+	int sensor;
 	int retval;
 	int val;
 	u8 reg;
@@ -160,8 +156,8 @@ static ssize_t pwm_curve_attr_store(struct device *dev,
 	if (retval)
 		return retval;
 
-	index = to_sensor_dev_attr(attr)->index;
-	switch (index) {
+	sensor = to_sensor_dev_attr(attr)->index;
+	switch (sensor) {
 	case 0:
 		reg = AYN_SENSOR_PWM_FAN_SPEED_1_REG;
 		break;
@@ -196,7 +192,7 @@ static ssize_t pwm_curve_attr_store(struct device *dev,
 		return -EINVAL;
 	}
 
-	switch (index) {
+	switch (sensor) {
 	case 0:
 	case 1:
 	case 2:
@@ -224,16 +220,16 @@ static ssize_t pwm_curve_attr_store(struct device *dev,
 	return count;
 }
 
-static ssize_t pwm_curve_attr_show(struct device *dev,
+static ssize_t pwm_curve_show(struct device *dev,
 			      struct device_attribute *attr, char *buf)
 {
-	int index;
+	int sensor;
 	int retval;
 	long val;
 	u8 reg;
 
-	index = to_sensor_dev_attr(attr)->index;
-	switch (index) {
+	sensor = to_sensor_dev_attr(attr)->index;
+	switch (sensor) {
 	case 0:
 		reg = AYN_SENSOR_PWM_FAN_SPEED_1_REG;
 		break;
@@ -272,7 +268,7 @@ static ssize_t pwm_curve_attr_show(struct device *dev,
 	if (retval)
 		return retval;
 
-	switch (index) {
+	switch (sensor) {
 	case 0:
 	case 1:
 	case 2:
@@ -287,16 +283,33 @@ static ssize_t pwm_curve_attr_show(struct device *dev,
 	return sysfs_emit(buf, "%ld\n", val);
 }
 
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point1_pwm, pwm_curve_attr, 0);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point2_pwm, pwm_curve_attr, 1);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point3_pwm, pwm_curve_attr, 2);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point4_pwm, pwm_curve_attr, 3);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point5_pwm, pwm_curve_attr, 4);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point1_temp, pwm_curve_attr, 5);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point2_temp, pwm_curve_attr, 6);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point3_temp, pwm_curve_attr, 7);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point4_temp, pwm_curve_attr, 8);
-static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point5_temp, pwm_curve_attr, 9);
+/* Thermal Sensors */
+struct thermal_sensor {
+	int (*read_sensor)(void);
+	char *name;
+	struct attribute_group *attrs;
+};
+
+static struct thermal_sensor thermal_sensors[];
+
+static ssize_t thermal_sensor_show(struct device *dev,
+			      	   struct device_attribute *attr, char *buf)
+{
+	int sensor;
+        sensor = to_sensor_dev_attr(attr)->index;
+
+	return sprintf(buf, "%d\n",
+		       thermal_sensors[sensor].read_sensor());
+}
+
+static ssize_t thermal_sensor_label(struct device *dev,
+			  	    struct device_attribute *attr, char *buf)
+{
+	int sensor;
+        sensor = to_sensor_dev_attr(attr)->index;
+
+	return sprintf(buf, "%s\n", thermal_sensors[sensor].name);
+}
 
 /* PWM mode functions */
 /* Manual provides direct control of the PWM */
@@ -327,6 +340,8 @@ static umode_t ayn_ec_hwmon_is_visible(const void *drvdata,
 		return 0444;
 	case hwmon_pwm:
 		return 0644;
+	case hwmon_temp:
+		return 0444;
 	default:
 		return 0;
 	}
@@ -432,7 +447,34 @@ static const struct hwmon_channel_info * const ayn_platform_sensors[] = {
 	NULL,
 };
 
-static struct attribute *ayn_fan_curve_attrs[] = {
+static int thermal_sensor_temp(int reg, long *val)
+{
+	int retval = read_from_ec(reg, 1, val);
+	if (retval)
+		return retval;
+	return val;
+};
+
+static int battery_sensor_temp(void)
+{
+	long val;
+       	val = thermal_sensor_temp(AYN_SENSOR_BAT_TEMP_REG, &val);
+	return val;
+};
+
+/* Fan curve attributes */
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point1_pwm, pwm_curve, 0);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point2_pwm, pwm_curve, 1);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point3_pwm, pwm_curve, 2);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point4_pwm, pwm_curve, 3);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point5_pwm, pwm_curve, 4);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point1_temp, pwm_curve, 5);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point2_temp, pwm_curve, 6);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point3_temp, pwm_curve, 7);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point4_temp, pwm_curve, 8);
+static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point5_temp, pwm_curve, 9);
+
+static struct attribute *ayn_sensor_attrs[] = {
 	&sensor_dev_attr_pwm1_auto_point1_pwm.dev_attr.attr,
 	&sensor_dev_attr_pwm1_auto_point2_pwm.dev_attr.attr,
 	&sensor_dev_attr_pwm1_auto_point3_pwm.dev_attr.attr,
@@ -443,10 +485,64 @@ static struct attribute *ayn_fan_curve_attrs[] = {
 	&sensor_dev_attr_pwm1_auto_point3_temp.dev_attr.attr,
 	&sensor_dev_attr_pwm1_auto_point4_temp.dev_attr.attr,
 	&sensor_dev_attr_pwm1_auto_point5_temp.dev_attr.attr,
-	NULL
+	NULL,
 };
 
-ATTRIBUTE_GROUPS(ayn_fan_curve);
+
+/* Temperature Sensor attributes */
+static SENSOR_DEVICE_ATTR(temp1_input, S_IRUGO, thermal_sensor_show, NULL, 0);
+static SENSOR_DEVICE_ATTR(temp1_label, S_IRUGO, thermal_sensor_label, NULL, 0);
+/*
+static SENSOR_DEVICE_ATTR(temp2_input, S_IRUGO, thermal_sensor_show, NULL, 1);
+static SENSOR_DEVICE_ATTR(temp2_label, S_IRUGO, thermal_sensor_label, NULL, 1);
+static SENSOR_DEVICE_ATTR(temp3_input, S_IRUGO, thermal_sensor_show, NULL, 2);
+static SENSOR_DEVICE_ATTR(temp3_label, S_IRUGO, thermal_sensor_label, NULL, 2);
+static SENSOR_DEVICE_ATTR(temp4_input, S_IRUGO, thermal_sensor_show, NULL, 3);
+static SENSOR_DEVICE_ATTR(temp4_label, S_IRUGO, thermal_sensor_label, NULL, 3);
+static SENSOR_DEVICE_ATTR(temp5_input, S_IRUGO, thermal_sensor_show, NULL, 4);
+static SENSOR_DEVICE_ATTR(temp5_label, S_IRUGO, thermal_sensor_label, NULL, 4);
+*/
+
+static struct attribute *battery_temp_attrs[] = {
+	&sensor_dev_attr_temp1_input.dev_attr.attr,
+	&sensor_dev_attr_temp1_label.dev_attr.attr,
+	NULL,
+};
+
+/*
+static struct attribute *motherboard_temp_attrs[] = {
+	&sensor_dev_attr_temp2_input.dev_attr.attr,
+	&sensor_dev_attr_temp2_label.dev_attr.attr,
+	NULL,
+};
+static struct attribute *charger_temp_attrs[] = {
+	&sensor_dev_attr_temp3_input.dev_attr.attr,
+	&sensor_dev_attr_temp3_label.dev_attr.attr,
+	NULL,
+};
+static struct attribute *vcore_temp_attrs[] = {
+	&sensor_dev_attr_temp4_input.dev_attr.attr,
+	&sensor_dev_attr_temp4_label.dev_attr.attr,
+	NULL,
+static struct attribute *processor_temp_attrs[] = {
+};
+	&sensor_dev_attr_temp5_input.dev_attr.attr,
+	&sensor_dev_attr_temp5_label.dev_attr.attr,
+	NULL,
+};
+*/
+ATTRIBUTE_GROUPS(ayn_sensor);
+ATTRIBUTE_GROUPS(battery_temp);
+
+static struct thermal_sensor thermal_sensors[] = {
+	{battery_sensor_temp, "Battery Temp", ayn_sensor_groups},
+/*	{temp2, "Motherboard Temp", &ayn_sensor_group},
+	{temp3, "Charger IC Temp", &ayn_sensor_group},
+	{temp4, "vCore Temp", &ayn_sensor_group},
+	{temp5, "CPU Core Temp", &ayn_sensor_group},*/
+	{0, },
+};
+
 
 static const struct hwmon_ops ayn_ec_hwmon_ops = {
 	.is_visible = ayn_ec_hwmon_is_visible,
@@ -465,6 +561,8 @@ static int ayn_platform_probe(struct platform_device *pdev)
 	const struct dmi_system_id *dmi_entry;
 	struct device *dev = &pdev->dev;
 	struct device *hwdev;
+	int retval;
+	int i;
 
 	dmi_entry = dmi_first_match(dmi_table);
 
@@ -472,7 +570,7 @@ static int ayn_platform_probe(struct platform_device *pdev)
 						"ayn-ec",
 						NULL,
 						&ayn_ec_chip_info,
-						ayn_fan_curve_groups);
+						ayn_sensor_groups);
 
 	return PTR_ERR_OR_ZERO(hwdev);
 }
