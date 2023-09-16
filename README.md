@@ -21,6 +21,14 @@ Then insert the module and check `sensors` and `dmesg` if appropriate:
 ```shell
 # insmod ayn-sensors.ko
 $ sensors
+ayn-ec-isa-0000
+Adapter: ISA adapter
+fan1:        3007 RPM
+Battery:      +29.0°C
+Motherboard:  +41.0°C
+Charger IC:   +38.0°C
+vCore:        +48.0°C
+CPU Core:     +48.0°C
 ```
 
 ## Install
