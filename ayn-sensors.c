@@ -358,8 +358,6 @@ static umode_t ayn_ec_hwmon_is_visible(const void *drvdata,
 		return 0444;
 	case hwmon_pwm:
 		return 0644;
-	case hwmon_temp:
-		return 0444;
 	default:
 		return 0;
 	}
