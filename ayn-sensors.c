@@ -146,7 +146,7 @@ static ssize_t pwm_curve_store(struct device *dev,
 			       struct device_attribute *attr, const char *buf,
 			       size_t count)
 {
-	int sensor;
+	int index;
 	int retval;
 	int val;
 	u8 reg;
@@ -155,8 +155,8 @@ static ssize_t pwm_curve_store(struct device *dev,
 	if (retval)
 		return retval;
 
-	sensor = to_sensor_dev_attr(attr)->index;
-	switch (sensor) {
+	index = to_sensor_dev_attr(attr)->index;
+	switch (index) {
 	case 0:
 		reg = AYN_SENSOR_PWM_FAN_SPEED_1_REG;
 		break;
@@ -191,7 +191,7 @@ static ssize_t pwm_curve_store(struct device *dev,
 		return -EINVAL;
 	}
 
-	switch (sensor) {
+	switch (index) {
 	case 0:
 	case 1:
 	case 2:
@@ -222,13 +222,13 @@ static ssize_t pwm_curve_store(struct device *dev,
 static ssize_t pwm_curve_show(struct device *dev,
 			      struct device_attribute *attr, char *buf)
 {
-	int sensor;
+	int index;
 	int retval;
 	long val;
 	u8 reg;
 
-	sensor = to_sensor_dev_attr(attr)->index;
-	switch (sensor) {
+	index = to_sensor_dev_attr(attr)->index;
+	switch (index) {
 	case 0:
 		reg = AYN_SENSOR_PWM_FAN_SPEED_1_REG;
 		break;
@@ -268,7 +268,7 @@ static ssize_t pwm_curve_show(struct device *dev,
 	if (retval)
 		return retval;
 
-	switch (sensor) {
+	switch (index) {
 	case 0:
 	case 1:
 	case 2:
@@ -311,11 +311,11 @@ static long thermal_sensor_temp(u8 reg, long *val)
 static ssize_t thermal_sensor_show(struct device *dev,
 			      	   struct device_attribute *attr, char *buf)
 {
-	int sensor;
+	int index;
 	long retval;
 	long val;
-        sensor = to_sensor_dev_attr(attr)->index;
-	retval = thermal_sensor_temp(thermal_sensors[sensor].reg, &val);
+	index = to_sensor_dev_attr(attr)->index;
+	retval = thermal_sensor_temp(thermal_sensors[index].reg, &val);
 	if (retval)
 		return retval;
 	return sprintf(buf, "%ld\n", val);
@@ -324,9 +324,9 @@ static ssize_t thermal_sensor_show(struct device *dev,
 static ssize_t thermal_sensor_label(struct device *dev,
 			  	    struct device_attribute *attr, char *buf)
 {
-	int sensor;
-        sensor = to_sensor_dev_attr(attr)->index;
-	return sprintf(buf, "%s\n", thermal_sensors[sensor].name);
+	int index;
+	index = to_sensor_dev_attr(attr)->index;
+	return sprintf(buf, "%s\n", thermal_sensors[index].name);
 }
 
 /* PWM mode functions */
