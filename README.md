@@ -1,7 +1,7 @@
 # Platform driver for AYN x86 handhelds
 
-This driver provides a hwmon interface for PWM control, as well as RGB
-control and access to temperature sensors provided by the system EC
+This driver provides a hwmon interface for PWM control, as well as access 
+to temperature sensors provided by the system EC
 
 Supported devices include:
 
