@@ -21,7 +21,7 @@ Then insert the module and check `sensors` and `dmesg` if appropriate:
 ```shell
 # insmod ayn-sensors.ko
 $ sensors
-ayn-ec-isa-0000
+aynec-isa-0000
 Adapter: ISA adapter
 fan1:        3007 RPM
 Battery:      +29.0°C
@@ -46,7 +46,7 @@ $ make
 ## Usage
 
 Insert the module with `insmod`. Then look for a `hwmon` device with name
-`ayn-ec`, i.e.:
+`aynec`, i.e.:
 
 `$ cat /sys/class/hwmon/hwmon?/name`
 
@@ -65,7 +65,7 @@ your own risk!***
 This will use the BIOS default fan curve and is the default setting of the EC.
 
 To enable automatic control of the fan (assuming `hwmon5` is our driver, look for
-`ayn-ec` in the `name` file):
+`aynec` in the `name` file):
 
 `# echo 0 > /sys/class/hwmon/hwmon5/pwm1_mode`
 
@@ -74,7 +74,7 @@ This mode is useful to explicitly set a fan speed, or with the use of userspace
 tools that adjust fan speed using a custom fan curve defined in software.
 
 To enable manual control of the fan (assuming `hwmon5` is our driver, look for
-`ayn-ec` in the `name` file):
+`aynec` in the `name` file):
 
 `# echo 1 > /sys/class/hwmon/hwmon5/pwm1_mode`
 
@@ -90,7 +90,7 @@ below that point and above the lower set point will run at that set points
 fan speed. Temperature is in degrees Celsius.
 
 To enable user defined control of the fan (assuming `hwmon5` is our driver,
-look for `ayn-ec` in the `name` file):
+look for `aynec` in the `name` file):
 
 `# echo 2 > /sys/class/hwmon/hwmon5/pwm1_mode`
 
