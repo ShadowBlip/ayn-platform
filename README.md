@@ -12,8 +12,8 @@ If you only want to build and test the module (you need headers for your
 kernel):
 
 ```shell
-$ git clone https://github.com/ShadowBlip/ayn-platform.git
-$ cd ayn-platform
+$ git clone https://github.com/ShadowBlip/ayn-sensors.git
+$ cd ayn-sensors
 $ make
 ```
 
@@ -37,8 +37,8 @@ You'll need appropriate headers for your kernel and `dkms` package from your
 distribution.
 
 ```shell
-$ git clone https://github.com/ShadowBlip/ayn-platform.git
-$ cd ayn-platform
+$ git clone https://github.com/ShadowBlip/ayn-sensors.git
+$ cd ayn-sensors
 $ make
 # make dkms
 ```
