@@ -84,6 +84,11 @@ static enum ayn_model model;
 #define AYN_LED_MODE_BREATH             0x00 /* Default breathing mode */
 #define AYN_LED_MODE_WRITE              0xAA /* User defined mode */
 
+enum led_mode {
+	breath = 0,
+	write,
+};
+
 static const struct dmi_system_id dmi_table[] = {
 	{
 		.matches = {
@@ -149,7 +154,7 @@ static int write_to_ec(u8 reg, u8 val)
 	return ret;
 }
 
-/* Thermal Sensors */
+/* Thermal Sensor Functions*/
 struct thermal_sensor {
 	char *name;
 	int reg;
@@ -175,7 +180,7 @@ static long thermal_sensor_temp(u8 reg, long *val)
 };
 
 static ssize_t thermal_sensor_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
+				   struct device_attribute *attr, char *buf)
 {
 	int index;
 	long retval;
@@ -188,7 +193,7 @@ static ssize_t thermal_sensor_show(struct device *dev,
 }
 
 static ssize_t thermal_sensor_label(struct device *dev,
-				struct device_attribute *attr, char *buf)
+				    struct device_attribute *attr, char *buf)
 {
 	int index;
 	index = to_sensor_dev_attr(attr)->index;
@@ -198,8 +203,8 @@ static ssize_t thermal_sensor_label(struct device *dev,
 /* PWM mode functions */
 /* Callbacks for pwm_auto_point attributes */
 static ssize_t pwm_curve_store(struct device *dev,
-		struct device_attribute *attr, const char *buf,
-		size_t count)
+			       struct device_attribute *attr,
+			       const char *buf,	size_t count)
 {
 	int index;
 	int retval;
@@ -275,7 +280,7 @@ static ssize_t pwm_curve_store(struct device *dev,
 }
 
 static ssize_t pwm_curve_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
+			      struct device_attribute *attr, char *buf)
 {
 	int index;
 	int retval;
@@ -359,7 +364,8 @@ static int ayn_pwm_user(void)
 
 /* Callbacks for hwmon interface */
 static umode_t ayn_ec_hwmon_is_visible(const void *drvdata,
-		enum hwmon_sensor_types type, u32 attr, int channel)
+				       enum hwmon_sensor_types type,
+				       u32 attr, int channel)
 {
 	switch (type) {
 	case hwmon_fan:
@@ -372,8 +378,8 @@ static umode_t ayn_ec_hwmon_is_visible(const void *drvdata,
 }
 
 static int ayn_platform_read(struct device *dev,
-		enum hwmon_sensor_types type, u32 attr, int channel,
-		long *val)
+			     enum hwmon_sensor_types type, u32 attr,
+			     int channel, long *val)
 {
 	int ret;
 
@@ -427,8 +433,9 @@ static int ayn_platform_read(struct device *dev,
 	return -EOPNOTSUPP;
 }
 
-static int ayn_platform_write(struct device *dev, enum hwmon_sensor_types type,
-		u32 attr, int channel, long val)
+static int ayn_platform_write(struct device *dev,
+			      enum hwmon_sensor_types type, u32 attr,
+			      int channel, long val)
 {
 	switch (type) {
 	case hwmon_pwm:
@@ -463,8 +470,59 @@ static int ayn_platform_write(struct device *dev, enum hwmon_sensor_types type,
 	}
 	return -EOPNOTSUPP;
 }
+static int ayn_led_mode_set(struct led_classdev *led_cdev, int mode)
+{
+	return 0;
+};
 
-/* Known sensors in the AYN EC controllers */
+static int ayn_led_mc_manual_set(struct led_classdev *led_cdev)
+{
+	struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
+	int retval;
+	int i;
+	int intensity;
+	int reg;
+	for (i = 0; i < mc_cdev->num_colors; i++) {
+		intensity = mc_cdev->subled_info[i].intensity;
+		reg = mc_cdev->subled_info[i].channel;
+		retval = write_to_ec(reg, intensity);
+		if (retval)
+			return retval;
+	}
+	return write_to_ec(AYN_LED_MODE_REG, AYN_LED_MODE_WRITE);
+}
+
+/* RGB LED Logic */
+static int ayn_led_mc_intensity_set(struct led_classdev *led_cdev, int color[])
+{
+        struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
+	int bright = led_cdev->brightness;
+	int m_bright = led_cdev->max_brightness;
+	int i;
+	for (i = 0; i < mc_cdev->num_colors; i++) {
+		mc_cdev->subled_info[i].intensity = bright * color[i]/m_bright;
+	}
+
+	return ayn_led_mc_manual_set(led_cdev);
+};
+
+static void ayn_led_mc_brightness_set(struct led_classdev *led_cdev,
+                                      enum led_brightness brightness)
+{
+        struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
+        int i;
+        led_mc_calc_color_components(mc_cdev, brightness);
+}
+
+static enum led_brightness ayn_led_mc_brightness_get(struct led_classdev *led_cdev)
+{
+        struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
+        enum led_brightness brightness = LED_OFF;
+        int i;
+        return brightness;
+};
+
+/* Simple hwmon sensors */
 static const struct hwmon_channel_info *ayn_platform_sensors[] = {
 	HWMON_CHANNEL_INFO(fan,
 			   HWMON_F_INPUT),
@@ -473,7 +531,7 @@ static const struct hwmon_channel_info *ayn_platform_sensors[] = {
 	NULL,
 };
 
-/* Temperature Sensor attributes */
+/* Temperature sensor and fan curve attributes */
 static SENSOR_DEVICE_ATTR(temp1_input, S_IRUGO, thermal_sensor_show, NULL, 0);
 static SENSOR_DEVICE_ATTR(temp1_label, S_IRUGO, thermal_sensor_label, NULL, 0);
 static SENSOR_DEVICE_ATTR(temp2_input, S_IRUGO, thermal_sensor_show, NULL, 1);
@@ -484,8 +542,6 @@ static SENSOR_DEVICE_ATTR(temp4_input, S_IRUGO, thermal_sensor_show, NULL, 3);
 static SENSOR_DEVICE_ATTR(temp4_label, S_IRUGO, thermal_sensor_label, NULL, 3);
 static SENSOR_DEVICE_ATTR(temp5_input, S_IRUGO, thermal_sensor_show, NULL, 4);
 static SENSOR_DEVICE_ATTR(temp5_label, S_IRUGO, thermal_sensor_label, NULL, 4);
-
-/* Fan curve attributes */
 static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point1_pwm, pwm_curve, 0);
 static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point2_pwm, pwm_curve, 1);
 static SENSOR_DEVICE_ATTR_RW(pwm1_auto_point3_pwm, pwm_curve, 2);
@@ -534,23 +590,7 @@ static const struct hwmon_chip_info ayn_ec_chip_info = {
 	.info = ayn_platform_sensors,
 };
 
-/* RGB LED Logic */
-static void ayn_led_mc_brightness_set(struct led_classdev *led_cdev,
-                                      enum led_brightness brightness)
-{
-        struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
-        int i;
-        led_mc_calc_color_components(mc_cdev, brightness);
-}
-
-static enum led_brightness ayn_led_mc_brightness_get(struct led_classdev *led_cdev)
-{
-        struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
-        enum led_brightness brightness = LED_OFF;
-        int i;
-        return brightness;
-}
-
+/* RGB LED init functions */
 struct mc_subled ayn_led_mc_subled_info[] = {
         {
                 .color_index = LED_COLOR_ID_RED,
@@ -584,18 +624,16 @@ struct led_classdev_mc ayn_led_mc = {
         .subled_info = ayn_led_mc_subled_info,
 };
 
-
-
 /* Initialization logic */
 static int ayn_platform_probe(struct platform_device *pdev)
 {
 	const struct dmi_system_id *dmi_entry;
 	struct device *dev = &pdev->dev;
 	struct device *hwdev;
+	int ret;
 
 	dmi_entry = dmi_first_match(dmi_table);
 
-	int ret;
         ret = devm_led_classdev_multicolor_register(dev, &ayn_led_mc);
 	if (ret)
 		return ret;
