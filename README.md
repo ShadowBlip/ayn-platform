@@ -12,14 +12,14 @@ If you only want to build and test the module (you need headers for your
 kernel):
 
 ```shell
-$ git clone https://github.com/ShadowBlip/ayn-sensors.git
-$ cd ayn-sensors
+$ git clone https://github.com/ShadowBlip/ayn-platform.git
+$ cd ayn-platform
 $ make
 ```
 
 Then insert the module and check `sensors` and `dmesg` if appropriate:
 ```shell
-# insmod ayn-sensors.ko
+# insmod ayn-platform.ko
 $ sensors
 aynec-isa-0000
 Adapter: ISA adapter
@@ -37,8 +37,8 @@ You'll need appropriate headers for your kernel and `dkms` package from your
 distribution.
 
 ```shell
-$ git clone https://github.com/ShadowBlip/ayn-sensors.git
-$ cd ayn-sensors
+$ git clone https://github.com/ShadowBlip/ayn-platform.git
+$ cd ayn-platform
 $ make
 # make dkms
 ```

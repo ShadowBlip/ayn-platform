@@ -21,6 +21,8 @@
 #include <linux/hwmon.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
+#include <linux/led-class-multicolor.h>
+#include <linux/leds.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/processor.h>
@@ -71,6 +73,16 @@ static enum ayn_model model;
 #define AYN_SENSOR_PWM_FAN_TEMP_3_REG		0x17
 #define AYN_SENSOR_PWM_FAN_TEMP_4_REG		0x19
 #define AYN_SENSOR_PWM_FAN_TEMP_5_REG		0x1B
+
+/* EC Controlled RGB registers */
+#define AYN_LED_MC_R_REG                0xB0 /* Red, range 0x00-0xFF */
+#define AYN_LED_MC_G_REG                0xB1 /* Green, range 0x00-0xFF */
+#define AYN_LED_MC_B_REG                0xB2 /* Blue, range 0x00-0xFF */
+#define AYN_LED_MODE_REG                0xB3 /* RGB Mode */
+
+/* RGB Mode values */
+#define AYN_LED_MODE_BREATH             0x00 /* Default breathing mode */
+#define AYN_LED_MODE_WRITE              0xAA /* User defined mode */
 
 static const struct dmi_system_id dmi_table[] = {
 	{
@@ -522,6 +534,58 @@ static const struct hwmon_chip_info ayn_ec_chip_info = {
 	.info = ayn_platform_sensors,
 };
 
+/* RGB LED Logic */
+static void ayn_led_mc_brightness_set(struct led_classdev *led_cdev,
+                                      enum led_brightness brightness)
+{
+        struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
+        int i;
+        led_mc_calc_color_components(mc_cdev, brightness);
+}
+
+static enum led_brightness ayn_led_mc_brightness_get(struct led_classdev *led_cdev)
+{
+        struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
+        enum led_brightness brightness = LED_OFF;
+        int i;
+        return brightness;
+}
+
+struct mc_subled ayn_led_mc_subled_info[] = {
+        {
+                .color_index = LED_COLOR_ID_RED,
+                .brightness = 255,
+                .intensity = 0,
+                .channel = AYN_LED_MC_R_REG,
+        },
+        {
+                .color_index = LED_COLOR_ID_GREEN,
+                .brightness = 255,
+                .intensity = 0,
+                .channel = AYN_LED_MC_R_REG,
+        },
+        {
+                .color_index = LED_COLOR_ID_BLUE,
+                .brightness = 255,
+                .intensity = 0,
+                .channel = AYN_LED_MC_R_REG,
+        },
+};
+
+struct led_classdev_mc ayn_led_mc = {
+        .led_cdev = {
+                .name = "multicolor:chassis",
+                .brightness = 0,
+                .max_brightness = 255,
+                .brightness_set = ayn_led_mc_brightness_set,
+                .brightness_get = ayn_led_mc_brightness_get,
+        },
+        .num_colors = ARRAY_SIZE(ayn_led_mc_subled_info),
+        .subled_info = ayn_led_mc_subled_info,
+};
+
+
+
 /* Initialization logic */
 static int ayn_platform_probe(struct platform_device *pdev)
 {
@@ -530,6 +594,11 @@ static int ayn_platform_probe(struct platform_device *pdev)
 	struct device *hwdev;
 
 	dmi_entry = dmi_first_match(dmi_table);
+
+	int ret;
+        ret = devm_led_classdev_multicolor_register(dev, &ayn_led_mc);
+	if (ret)
+		return ret;
 
 	hwdev = devm_hwmon_device_register_with_info(dev,
 						"aynec",
