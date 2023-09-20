@@ -1,0 +1,3 @@
+menuconfig AYN_PLATFORM
+	tristate "Ayn x86 PWM Control Support"
+	select LEDS_CLASS_MULTICOLOR
