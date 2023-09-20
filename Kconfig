@@ -1,3 +1,10 @@
 menuconfig AYN_PLATFORM
 	tristate "Ayn x86 PWM Control Support"
+	depends on HWMON
+	select LEDS_CLASS
 	select LEDS_CLASS_MULTICOLOR
+	help
+	  This driver provides support for Ayn x86 Handheld Consoles by
+	  providing a hwmon interface for pwm fan control and a BIOS
+	  controlled custom fan curve, as well as an RGB LED control 
+	  via a multicolor LED sysfs interface.
