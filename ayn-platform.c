@@ -506,7 +506,7 @@ static int ayn_platform_write(struct device *dev,
 				val = val >> 1; /* EC max value is 128 */
 				break;
 			default:
-				return -EOPNOTSUPP;
+				break;
 			}
 			return write_to_ec(AYN_SENSOR_PWM_FAN_SET_REG, val);
 		default:
