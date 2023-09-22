@@ -83,6 +83,7 @@ static enum ayn_model model;
 /* RGB Mode values */
 #define AYN_LED_MODE_BREATH             0x00 /* Default breathing mode */
 #define AYN_LED_MODE_WRITE              0xAA /* User defined mode */
+#define AYN_LED_MODE_WRITE_ENABLED      0x55 /* Return value when probed */
 
 enum led_mode {
 	breath = 0,
@@ -560,10 +561,11 @@ static ssize_t led_mode_show(struct device *dev,
 		val = breath;
 		break;
 	case AYN_LED_MODE_WRITE:
+	case AYN_LED_MODE_WRITE_ENABLED:
 		val = write;
 		break;
 	default:
-		return -EINVAL;
+		break;
 	}
 	return sysfs_emit(buf, "%d\n", val);
 };
@@ -588,6 +590,7 @@ static void ayn_led_mc_brightness_set(struct led_classdev *led_cdev,
 
 	switch (mode) {
 	case AYN_LED_MODE_WRITE:
+	case AYN_LED_MODE_WRITE_ENABLED:
 		break;
 	default:
 		return;
