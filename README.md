@@ -117,9 +117,9 @@ To change modes:
 `echo 1 | sudo tee /sys/class/leds/multicolor:chassis/device/led_mode`
 
 #### Identifying and Setting Color Values
-You can read the `brightness`, `multi_index`, and `multi_intensity from their
+You can read the `brightness`, `multi_index`, and `multi_intensity` from their
 respective files in `/sys/class/leds/multicolor:chassis/` . Each do the following:
-brightness: The current average luminosity of all three colors in the range [0-255]`.
+brightness: The current average luminosity of all three colors in the range `[0-255]`.
 Setting this to `0` will turn off the LED's while setting it to `255` represents the
 maximum luminosity of the selected multi_intensity range.
 multi_index: Displays the order of the colors when setting multi_intensity. Set to
