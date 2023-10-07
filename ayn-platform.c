@@ -648,13 +648,13 @@ struct mc_subled ayn_led_mc_subled_info[] = {
                 .color_index = LED_COLOR_ID_GREEN,
                 .brightness = 0,
                 .intensity = 0,
-                .channel = AYN_LED_MC_B_REG,
+                .channel = AYN_LED_MC_G_REG,
         },
         {
                 .color_index = LED_COLOR_ID_BLUE,
                 .brightness = 0,
                 .intensity = 0,
-                .channel = AYN_LED_MC_G_REG,
+                .channel = AYN_LED_MC_B_REG,
         },
 };
 
