@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0+
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Platform driver for Ayn x86 Handhelds that expose fan reading and
  * control, as well as temperature sensor readings exposed by the EC
@@ -12,7 +12,7 @@
  * are scaled from the range [0-255]. Temperature readings are
  * scaled from the hwmon expected millidegrees to degrees when read.
  *
- * Copyright (C) 2023 Derek J. Clark <derekjohn.clark@gmail.com>
+ * Copyright (C) 2023-2024 Derek J. Clark <derekjohn.clark@gmail.com>
  */
 
 #include <linux/acpi.h>
