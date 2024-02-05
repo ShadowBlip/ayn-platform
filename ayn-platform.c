@@ -508,6 +508,10 @@ static int ayn_platform_write(struct device *dev, enum hwmon_sensor_types type,
 }
 
 /* RGB LED Logic */
+static int led_mode_write(int mode) {
+  return write_to_ec(AYN_LED_MODE_REG, mode);
+};
+
 static ssize_t led_mode_store(struct device *dev, struct device_attribute *attr,
                               const char *buf, size_t count) {
   int val;
@@ -524,7 +528,7 @@ static ssize_t led_mode_store(struct device *dev, struct device_attribute *attr,
     mode = AYN_LED_MODE_BREATH;
   }
 
-  retval = write_to_ec(AYN_LED_MODE_REG, mode);
+  retval = led_mode_write(mode);
   if (retval)
     return retval;
 
@@ -556,18 +560,33 @@ static ssize_t led_mode_show(struct device *dev, struct device_attribute *attr,
 
 static DEVICE_ATTR_RW(led_mode);
 
-static void ayn_led_mc_brightness_set(struct led_classdev *led_cdev,
-                                      enum led_brightness brightness) {
+static int ayn_led_mc_brightness_write(struct led_classdev *led_cdev,
+                                       enum led_brightness brightness) {
+
   struct led_classdev_mc *mc_cdev = lcdev_to_mccdev(led_cdev);
-  long mode;
+  struct mc_subled s_led;
+  int i;
   int retval;
   int val;
-  int i;
-  struct mc_subled s_led;
 
-  led_cdev->brightness = brightness;
+  for (i = 0; i < mc_cdev->num_colors; i++) {
+    s_led = mc_cdev->subled_info[i];
+    val = brightness * s_led.intensity / led_cdev->max_brightness;
+    retval = write_to_ec(s_led.channel, val);
+    if (retval)
+      return retval;
+  }
+
+  return write_to_ec(AYN_LED_MODE_REG, AYN_LED_MODE_WRITE);
+
+};
+
+static void ayn_led_mc_brightness_set(struct led_classdev *led_cdev,
+                                      enum led_brightness brightness) {
+  long mode;
+  int retval;
+
   retval = read_from_ec(AYN_LED_MODE_REG, 1, &mode);
-
   if (retval)
     return;
 
@@ -579,13 +598,8 @@ static void ayn_led_mc_brightness_set(struct led_classdev *led_cdev,
     return;
   }
 
-  for (i = 0; i < mc_cdev->num_colors; i++) {
-    s_led = mc_cdev->subled_info[i];
-    val = brightness * s_led.intensity / led_cdev->max_brightness;
-    write_to_ec(s_led.channel, val);
-  }
-
-  retval = write_to_ec(AYN_LED_MODE_REG, AYN_LED_MODE_WRITE);
+  led_cdev->brightness = brightness;
+  ayn_led_mc_brightness_write(led_cdev, brightness);
 };
 
 static enum led_brightness
@@ -655,17 +669,25 @@ struct led_classdev_mc ayn_led_mc = {
 static int ayn_platform_probe(struct platform_device *pdev) {
   struct device *dev = &pdev->dev;
   struct device *hwdev;
-  int ret;
+  int retval;
 
-  ret = devm_led_classdev_multicolor_register(dev, &ayn_led_mc);
-  if (ret)
-    return ret;
+  retval = devm_led_classdev_multicolor_register(dev, &ayn_led_mc);
+  if (retval)
+    return retval;
 
-  struct device *led_dev = ayn_led_mc.led_cdev.dev;
+  struct led_classdev *led_cdev = &ayn_led_mc.led_cdev;
 
-  ret = devm_device_add_groups(led_dev, ayn_led_mc_groups);
-  if (ret)
-    return ret;
+  retval = devm_device_add_groups(led_cdev->dev, ayn_led_mc_groups);
+  if (retval)
+    return retval;
+
+  retval = led_mode_write(AYN_LED_MODE_WRITE);
+  if (retval)
+    return retval;
+
+  retval = ayn_led_mc_brightness_write(led_cdev, 0);
+  if (retval)
+    return retval;
 
   hwdev = devm_hwmon_device_register_with_info(
       dev, "aynec", NULL, &ayn_ec_chip_info, ayn_sensors_groups);
