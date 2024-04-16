@@ -56,7 +56,7 @@ static enum ayn_model model;
 #define AYN_SENSOR_VCORE_TEMP_REG       0x08  /* vCore */
 
 /* Fan reading and PWM */
-#define AYN_SENSOR_PWM_FAN_MODE_REG     0x10  /* PWM operating mode */
+#define AYN_SENSOR_PWM_FAN_ENABLE_REG   0x10  /* PWM operating mode */
 #define AYN_SENSOR_PWM_FAN_SET_REG      0x11  /* PWM duty cycle */
 #define AYN_SENSOR_PWM_FAN_SPEED_REG    0x20  /* Fan speed */
 
@@ -351,20 +351,20 @@ static ssize_t pwm_curve_show(struct device *dev, struct device_attribute *attr,
 /* Manual provides direct control of the PWM */
 static int ayn_pwm_manual(void)
 {
-        return write_to_ec(AYN_SENSOR_PWM_FAN_MODE_REG, 0x00);
+        return write_to_ec(AYN_SENSOR_PWM_FAN_ENABLE_REG, 0x00);
 }
 
 /* Auto provides EC full control of the PWM */
 static int ayn_pwm_auto(void)
 {
-        return write_to_ec(AYN_SENSOR_PWM_FAN_MODE_REG, 0x01);
+        return write_to_ec(AYN_SENSOR_PWM_FAN_ENABLE_REG, 0x01);
 }
 
 /* User defined mode allows users to set a custom 5 point
  * fan curve in the EC which uses the CPU temperature. */
 static int ayn_pwm_user(void)
 {
-        return write_to_ec(AYN_SENSOR_PWM_FAN_MODE_REG, 0x02);
+        return write_to_ec(AYN_SENSOR_PWM_FAN_ENABLE_REG, 0x02);
 }
 
 /* Temperature sensor and fan curve attributes */
@@ -446,6 +446,21 @@ static int ayn_platform_read(struct device *dev, enum hwmon_sensor_types type,
                 break;
         case hwmon_pwm:
                 switch (attr) {
+                case hwmon_pwm_enable:
+                        ret = read_from_ec(AYN_SENSOR_PWM_FAN_ENABLE_REG, 1, val);
+                        switch (*val) {
+                        /* EC uses 0 for manual and 1 for automatic,
+                           reflect hwmon usage instead */
+                        case 0:
+                                *val = 1;
+                                break;
+                        case 1:
+                                *val = 0;
+                                break;
+                        default:
+                                break;
+                        }
+                        return ret;
                 case hwmon_pwm_input:
                         ret = read_from_ec(AYN_SENSOR_PWM_FAN_SET_REG, 1, val);
                         if (ret)
@@ -460,21 +475,6 @@ static int ayn_platform_read(struct device *dev, enum hwmon_sensor_types type,
                                 break;
                         }
                         return 0;
-                case hwmon_pwm_mode:
-                        ret = read_from_ec(AYN_SENSOR_PWM_FAN_MODE_REG, 1, val);
-                        switch (*val) {
-                        /* EC uses 0 for manual and 1 for automatic,
-                           reflect hwmon usage instead */
-                        case 0:
-                                *val = 1;
-                                break;
-                        case 1:
-                                *val = 0;
-                                break;
-                        default:
-                                break;
-                        }
-                        return ret;
                 default:
                         break;
                 }
@@ -491,7 +491,7 @@ static int ayn_platform_write(struct device *dev, enum hwmon_sensor_types type,
         switch (type) {
         case hwmon_pwm:
                 switch (attr) {
-                case hwmon_pwm_mode:
+                case hwmon_pwm_enable:
                         if (val == 1)
                                 return ayn_pwm_manual();
                         else if (val == 2)
@@ -637,7 +637,7 @@ ATTRIBUTE_GROUPS(ayn_led_mc);
 /* Initialization logic */
 static const struct hwmon_channel_info *ayn_platform_sensors[] = {
         HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT),
-        HWMON_CHANNEL_INFO(pwm, HWMON_PWM_INPUT | HWMON_PWM_MODE),
+        HWMON_CHANNEL_INFO(pwm, HWMON_PWM_INPUT | HWMON_PWM_ENABLE),
         NULL,
 };
 
