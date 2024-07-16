@@ -67,7 +67,7 @@ This will use the BIOS default fan curve and is the default setting of the EC.
 To enable automatic control of the fan (assuming `hwmon5` is our driver, look for
 `aynec` in the `name` file):
 
-`# echo 0 > /sys/class/hwmon/hwmon5/pwm1_mode`
+`# echo 0 > /sys/class/hwmon/hwmon5/pwm1_enable`
 
 #### Manual Control
 This mode is useful to explicitly set a fan speed, or with the use of userspace
@@ -76,7 +76,7 @@ tools that adjust fan speed using a custom fan curve defined in software.
 To enable manual control of the fan (assuming `hwmon5` is our driver, look for
 `aynec` in the `name` file):
 
-`# echo 1 > /sys/class/hwmon/hwmon5/pwm1_mode`
+`# echo 1 > /sys/class/hwmon/hwmon5/pwm1_enable`
 
 Then input values in the range `[0-255]` to the pwm:
 
@@ -92,7 +92,7 @@ fan speed. Temperature is in degrees Celsius.
 To enable user defined control of the fan (assuming `hwmon5` is our driver,
 look for `aynec` in the `name` file):
 
-`# echo 2 > /sys/class/hwmon/hwmon5/pwm1_mode`
+`# echo 2 > /sys/class/hwmon/hwmon5/pwm1_enable`
 
 Set an input value in the range `[0-255]` to the pwm:
 
@@ -129,3 +129,146 @@ and 255 is most luminous. The value is dispalyed and set with three numbers sepa
 by a single space. Each of these values is multiplied by the current brightness and
 divided by the maximum brightness when setting the true value. A setting of `0 0 0` is
 off and `255 255 255` represents all colors at maximum intensity.
+
+## Changing Startup Defaults
+The platform driver is fully exposed over systemd udev. This can be used to write udev rules that set attributes at startup.
+
+### Udev Attributes Tree
+#### LEDs
+```$ udevadm info --attribute-walk /sys/class/leds/multicolor:chassis
+
+looking at device '/devices/platform/ayn-platform/leds/multicolor:chassis':
+    KERNEL=="multicolor:chassis"
+    SUBSYSTEM=="leds"
+    DRIVER==""
+    ATTR{brightness}=="0"
+    ATTR{led_mode}=="1"
+    ATTR{max_brightness}=="255"
+    ATTR{multi_index}=="red green blue"
+    ATTR{multi_intensity}=="0 0 0"
+    ATTR{power/control}=="auto"
+    ATTR{power/runtime_active_time}=="0"
+    ATTR{power/runtime_status}=="unsupported"
+    ATTR{power/runtime_suspended_time}=="0"
+    ATTR{trigger}=="[none] usb-gadget usb-host rc-feedback kbd-scrolllock kbd-numlock kbd-capslock kbd-kanalock kbd-shiftlock kbd-altgrlock kbd-ctrllock kbd-altlock kbd-shiftllock kbd-shiftrlock kbd-ctrlllock kbd-ctrlrlock ACAD-online >
+
+  looking at parent device '/devices/platform/ayn-platform':
+    KERNELS=="ayn-platform"
+    SUBSYSTEMS=="platform"
+    DRIVERS=="ayn-platform"
+    ATTRS{driver_override}=="(null)"
+    ATTRS{power/control}=="auto"
+    ATTRS{power/runtime_active_time}=="0"
+    ATTRS{power/runtime_status}=="unsupported"
+    ATTRS{power/runtime_suspended_time}=="0"
+
+  looking at parent device '/devices/platform':
+    KERNELS=="platform"
+    SUBSYSTEMS==""
+    DRIVERS==""
+    ATTRS{power/control}=="auto"
+    ATTRS{power/runtime_active_time}=="0"
+    ATTRS{power/runtime_status}=="unsupported"
+    ATTRS{power/runtime_suspended_time}=="0"
+
+```
+
+#### hwmon
+```
+$ udevadm info  --attribute-walk /sys/class/hwmon/hwmon6
+
+  looking at device '/devices/platform/ayn-platform/hwmon/hwmon6':
+    KERNEL=="hwmon6"
+    SUBSYSTEM=="hwmon"
+    DRIVER==""
+    ATTR{fan1_input}=="3032"
+    ATTR{name}=="aynec"
+    ATTR{power/control}=="auto"
+    ATTR{power/runtime_active_time}=="0"
+    ATTR{power/runtime_status}=="unsupported"
+    ATTR{power/runtime_suspended_time}=="0"
+    ATTR{pwm1}=="64"
+    ATTR{pwm1_auto_point1_pwm}=="0"
+    ATTR{pwm1_auto_point1_temp}=="0"
+    ATTR{pwm1_auto_point2_pwm}=="0"
+    ATTR{pwm1_auto_point2_temp}=="0"
+    ATTR{pwm1_auto_point3_pwm}=="0"
+    ATTR{pwm1_auto_point3_temp}=="0"
+    ATTR{pwm1_auto_point4_pwm}=="0"
+    ATTR{pwm1_auto_point4_temp}=="0"
+    ATTR{pwm1_auto_point5_pwm}=="0"
+    ATTR{pwm1_auto_point5_temp}=="0"
+    ATTR{pwm1_enable}=="0"
+    ATTR{temp1_input}=="35000"
+    ATTR{temp1_label}=="Battery"
+    ATTR{temp2_input}=="42000"
+    ATTR{temp2_label}=="Motherboard"
+    ATTR{temp3_input}=="53000"
+    ATTR{temp3_label}=="Charger IC"
+    ATTR{temp4_input}=="48000"
+    ATTR{temp4_label}=="vCore"
+    ATTR{temp5_input}=="47000"
+    ATTR{temp5_label}=="CPU Core"
+
+  looking at parent device '/devices/platform/ayn-platform':
+    KERNELS=="ayn-platform"
+    SUBSYSTEMS=="platform"
+    DRIVERS=="ayn-platform"
+    ATTRS{driver_override}=="(null)"
+    ATTRS{power/control}=="auto"
+    ATTRS{power/runtime_active_time}=="0"
+    ATTRS{power/runtime_status}=="unsupported"
+    ATTRS{power/runtime_suspended_time}=="0"
+
+  looking at parent device '/devices/platform':
+    KERNELS=="platform"
+    SUBSYSTEMS==""
+    DRIVERS==""
+    ATTRS{power/control}=="auto"
+    ATTRS{power/runtime_active_time}=="0"
+    ATTRS{power/runtime_status}=="unsupported"
+    ATTRS{power/runtime_suspended_time}=="0"
+
+```
+
+### Creating a rule
+You can store a udev rule as `/etc/udev/rules.d/##-rule_name.rules`
+
+All rules will start like this:
+`ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds"`
+
+To define a default, add the attribute in the format `ATTR{name}=value`
+
+LEDs valid attributes are:
+```
+ATTR{brightness}=="[0-255]"
+ATTR{led_mode}=="[0-1]"
+ATTR{multi_intensity}=="[0-255] [0-255] [0-255]"
+```
+
+hwmon valid attributes are:
+```
+ATTR{pwm1}=="[0-100]"
+ATTR{pwm1_auto_point1_pwm}=="[0-255]"
+ATTR{pwm1_auto_point1_temp}=="[0-100]"
+ATTR{pwm1_auto_point2_pwm}=="[0-255]"
+ATTR{pwm1_auto_point2_temp}=="[0-100]"
+ATTR{pwm1_auto_point3_pwm}=="[0-255]"
+ATTR{pwm1_auto_point3_temp}=="[0-100]"
+ATTR{pwm1_auto_point4_pwm}=="[0-255]"
+ATTR{pwm1_auto_point4_temp}=="[0-100]"
+ATTR{pwm1_auto_point5_pwm}=="[0-255]"
+ATTR{pwm1_auto_point5_temp}=="[0-100]"
+ATTR{pwm1_enable}=="[0-2]"
+```
+
+
+As en example, to set the LED's to breath:
+`
+ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds", ATTR{led_mode}=="0"
+`
+
+to create the rule in one line:
+```shell
+$ echo 'ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds", ATTR{led_mode}=="0"' | sudo tee /etc/udev/rules.d/99-led_startup.rules
+```
