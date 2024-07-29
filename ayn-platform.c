@@ -713,7 +713,7 @@ static int ayn_platform_probe(struct platform_device *pdev)
 
         struct led_classdev *led_cdev = &ayn_led_mc.led_cdev;
 
-        retval = devm_device_add_group(ayn_led_mc.led_cdev.dev, ayn_led_mc_groups);
+        retval = devm_device_add_group(ayn_led_mc.led_cdev.dev, *ayn_led_mc_groups);
         if (retval)
                 return retval;
 
