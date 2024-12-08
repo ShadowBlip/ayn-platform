@@ -270,5 +270,5 @@ ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds", ATTR{led_
 
 to create the rule in one line:
 ```shell
-$ echo 'ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds", ATTR{led_mode}=="0"' | sudo tee /etc/udev/rules.d/99-led_startup.rules
+$ echo 'ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds", ATTR{led_mode}="0"' | sudo tee /etc/udev/rules.d/99-led_startup.rules
 ```
