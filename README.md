@@ -265,7 +265,7 @@ ATTR{pwm1_enable}=="[0-2]"
 
 As en example, to set the LED's to breath:
 `
-ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds", ATTR{led_mode}=="0"
+ACTION=="add|change", KERNEL=="multicolor:chassis", SUBSYSTEM=="leds", ATTR{led_mode}="0"
 `
 
 to create the rule in one line:
